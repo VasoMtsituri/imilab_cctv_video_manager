@@ -4,6 +4,19 @@ import sqlite3
 import pandas as pd
 
 
+class ImiLabCCTVVideoManager:
+    def __int__(self, db_file_path):
+        try:
+            self.__conn = sqlite3.connect(db_file_path)
+        except sqlite3.OperationalError as not_found:
+            logging.info(f'DB file not found: {not_found}')
+
+            self.__conn = None
+
+    def is_connected(self):
+        return True if self.__conn else False
+
+
 def get_cursor_from_db_file(db: str):
     """
     Establishes connection to the SQLite database
@@ -39,7 +52,7 @@ def execute_query(cursor: sqlite3.Cursor, query: str):
 
 
 if __name__ == '__main__':
-    _conn = get_cursor_from_db_file('<path/to/db/file>')
+    _conn = get_cursor_from_db_file('<path/to/db/file>.db')
     # data = execute_query(conn, """Select * from camera""")
     # data = execute_query(conn, """SELECT name FROM sqlite_master WHERE type='table';""")
     _data = execute_query(_conn, """PRAGMA table_info('camera')""")
