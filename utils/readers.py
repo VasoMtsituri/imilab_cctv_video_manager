@@ -1,11 +1,14 @@
 import logging
 import sqlite3
+from typing import List, Tuple
 
-import pandas as pd
+logging.basicConfig(level=logging.INFO)
+
+MAIN_TABLE_NAME = 'camera'
 
 
 class ImiLabCCTVVideoManager:
-    def __int__(self, db_file_path):
+    def __init__(self, db_file_path):
         try:
             self.__conn = sqlite3.connect(db_file_path)
         except sqlite3.OperationalError as not_found:
@@ -13,52 +16,50 @@ class ImiLabCCTVVideoManager:
 
             self.__conn = None
 
-    def is_connected(self):
+    def is_connected(self) -> bool:
         return True if self.__conn else False
 
+    def get_cursor(self) -> sqlite3.Cursor:
+        """
+        Returns the cursor of the connection
 
-def get_cursor_from_db_file(db: str):
-    """
-    Establishes connection to the SQLite database
-    based on the path to the .db file and returns
-    cursor of that connection
+        :return: sqlite3.Cursor object
+        """
 
-    :param db: path to db file
-    :return: sqlite3.Cursor object
-    """
-    conn = sqlite3.connect(db)
-    cursor = conn.cursor()
+        return self.__conn.cursor()
 
-    return cursor
+    def execute_query(self, query: str) -> List[Tuple]:
+        """
+        Executes the query given as argument on the SQLite cursor object
 
+        :param query: query which needs to be executed on the cursor given as an argument
+        :return: List of tuples, representing the result (rows of a table) of the query execution
+        """
+        cursor = self.get_cursor()
+        res_obj = cursor.execute(query)  # we can also use .fetchall()
+        rows = [x for x in res_obj]
 
-def execute_query(cursor: sqlite3.Cursor, query: str):
-    """
-    Executes the query given as argument on the SQLite
-    cursor object
+        return rows
 
-    :param cursor: Cursor object
-    :param query: query which needs to be executed on
-    the cursor given as an argument
+    # TODO: Needs to be reviewed, because the following warning:
+    # "pandas only supports SQLAlchemy connectable (engine/connection)
+    #  or database string URI or sqlite3 DBAPI2 connection"
 
-    :return: List of tuples, representing the result
-    (rows of a table) of the query execution
-    """
-    res_obj = cursor.execute(query)  # we can also use .fetchall()
-
-    rows = [x for x in res_obj]
-
-    return rows
+    # def retrieve_table(self, table_name: str) -> pd.DataFrame:
+    #     """
+    #     Retrieves the table from the SQLite db
+    #
+    #     :param table_name: name of the table to be retrieved
+    #     :return: Table content as a Dataframe
+    #     """
+    #     df = pd.read_sql_table(f"SELECT * from {table_name}", con=self.get_cursor())
+    #
+    #     return df
 
 
 if __name__ == '__main__':
-    _conn = get_cursor_from_db_file('<path/to/db/file>.db')
-    # data = execute_query(conn, """Select * from camera""")
-    # data = execute_query(conn, """SELECT name FROM sqlite_master WHERE type='table';""")
-    _data = execute_query(_conn, """PRAGMA table_info('camera')""")
+    cctv_manager = ImiLabCCTVVideoManager(db_file_path='db_file_path')
 
-    _conn = sqlite3.connect('../cctv_recordings/2022081205/backup.db3')
-
-    data = pd.read_sql_query("SELECT * from camera", _conn)
+    data = cctv_manager.execute_query(f"SELECT * from {MAIN_TABLE_NAME}")
 
     logging.info(data)
