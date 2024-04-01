@@ -19,7 +19,7 @@ class ImiLabCCTVVideoManager:
             self.__conn = None
 
     def is_connected(self) -> bool:
-        return True if self.__conn else False
+        return bool(self.__conn)
 
     def get_cursor(self) -> sqlite3.Cursor:
         """
