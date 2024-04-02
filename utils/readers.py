@@ -1,3 +1,7 @@
+"""
+This is the module, representing reader util class for ImiLab CCTV Manager
+"""
+
 import logging
 import sqlite3
 from typing import List, Tuple
@@ -9,17 +13,32 @@ logging.basicConfig(level=logging.INFO)
 MAIN_TABLE_NAME = 'camera'
 
 
-class ImiLabCCTVVideoManager:
+class ImiLabCCTVVideoManagerReader:
+    """
+    This class provides reading capabilities for ImiLab CCTV Manager
+    """
+
     def __init__(self, db_file_path):
+        """
+        Initializes a new instance of the ImiLabCCTVVideoManagerReader class by
+        attempting to connect to the db file
+
+        :param db_file_path: Pathlike string referring the path to the db file
+        """
         try:
             self.__conn = sqlite3.connect(db_file_path)
         except sqlite3.OperationalError as not_found:
-            logging.info(f'DB file not found: {not_found}')
+            logging.info('DB file not found: %s', not_found)
 
             self.__conn = None
 
     def is_connected(self) -> bool:
-        return True if self.__conn else False
+        """
+        Checks whether ImiLab CCTV Manager Reader is connected to DB or not
+
+        :return: boolean indicating whether ImiLab CCTV is connected to DB or not
+        """
+        return bool(self.__conn)
 
     def get_cursor(self) -> sqlite3.Cursor:
         """
@@ -39,7 +58,7 @@ class ImiLabCCTVVideoManager:
         """
         cursor = self.get_cursor()
         res_obj = cursor.execute(query)  # we can also use .fetchall()
-        rows = [x for x in res_obj]
+        rows = list(res_obj)
 
         return rows
 
